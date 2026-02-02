@@ -10,6 +10,7 @@
 typedef struct HandEquity {
     float win, chop;
     uint64_t winOuts, chopOuts;
+    double equity;
 } handequity_t;
 
 typedef struct EquityInfo {

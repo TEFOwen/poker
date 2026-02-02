@@ -38,7 +38,8 @@ void calc_and_print_equity(evaluator_t *evaluator, card_t *hands, size_t nHands,
 
     handequity_t *equities = equity->equities;
     for (int i = 0; i < nHands; ++i) {
-        printf("\tPlayer %d: Win: %.2f%%", i + 1, equities[i].win * 100.0f);
+        printf("\tPlayer %d: Equity: %.2lf%%, Win: %.2f%%", i + 1,
+               equities[i].equity * 100.0, equities[i].win * 100.0f);
         if (equities[i].chop != 0.0f)
             printf(", Chop: %.2f%%", equities[i].chop * 100.0f);
 
@@ -322,9 +323,10 @@ int range_equity() {
     equity.equities = calloc(2, sizeof(handequity_t));
 
     for (int a = 0; a < handRange1->size; ++a) {
-        memcpy(hands, handrange_get(handRange1, a), sizeof(card_t) * 2);
+        memcpy(hands, handrange_get(handRange1, a)->cards, sizeof(card_t) * 2);
         for (int b = 0; b < handRange2->size; ++b) {
-            memcpy(hands + 2, handrange_get(handRange2, b), sizeof(card_t) * 2);
+            memcpy(hands + 2, handrange_get(handRange2, b)->cards,
+                   sizeof(card_t) * 2);
 
             bool duplicate = false;
             for (int i = 0; i < 4 - 1; ++i)
@@ -393,11 +395,15 @@ int main(int argc, char *argv[]) {
         }
 
         for (int i = 0; i < handRange->size; ++i) {
-            const card_t *cards = handrange_get(handRange, i);
+            const handentry_t *hand = handrange_get(handRange, i);
             char card1[3], card2[3];
-            card_to_string(cards[0], card1);
-            card_to_string(cards[1], card2);
-            printf("%s %s\n", card1, card2);
+            card_to_string(hand->cards[0], card1);
+            card_to_string(hand->cards[1], card2);
+            if (hand->frequency == 1.0f)
+                printf("%s %s\n", card1, card2);
+            else
+                printf("%s %s : %.2f%%\n", card1, card2,
+                       hand->frequency * 100.0f);
         }
 
         handrange_destroy(handRange);

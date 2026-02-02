@@ -38,6 +38,7 @@ void equity_inner(evaluator_t *evaluator, equityinfo_t *equity,
                     equity->equities[i].chopOuts++;
                 else
                     equity->equities[i].winOuts++;
+                equity->equities[i].equity += 1.0 / (double)winners;
             }
         }
 
@@ -103,6 +104,7 @@ equityinfo_t *equity_calc(evaluator_t *evaluator, card_t *hands, size_t nHands,
             (double)equity->equities[i].winOuts / (double)equity->total;
         equity->equities[i].chop =
             (double)equity->equities[i].chopOuts / (double)equity->total;
+        equity->equities[i].equity /= (double)equity->total;
     }
 
     clock_gettime(CLOCK_MONOTONIC, &end);

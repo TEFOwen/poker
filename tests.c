@@ -280,13 +280,30 @@ int test_handrange(evaluator_t *) {
     return 0;
 }
 
+int test_handrange_freq(evaluator_t *) {
+    TEST_HANDRANGE_LENGTH("AA:50", 6);
+    TEST_HANDRANGE_LENGTH("AK:25", 16);
+    TEST_HANDRANGE_LENGTH("KK+:13", 6 * 2 + 12 * 16);
+    TEST_HANDRANGE_LENGTH("38-:57.5", 6 * 2 + 16 * 11);
+    TEST_HANDRANGE_LENGTH("AKs:98.12", 4);
+    TEST_HANDRANGE_LENGTH("AQs+:21", 4 * 2);
+    TEST_HANDRANGE_LENGTH("AKo:.2 77", 12 + 6);
+
+    return 0;
+}
+
 const struct Test {
     const char *name;
     int (*func)(evaluator_t *);
-} tests[] = {{"flush", test_flush},           {"unique", test_unique},
-             {"primes", test_primes},         {"handrange", test_handrange},
-             {"all_5card", test_all_5card},   {"all_7card", test_all_7card},
-             {"rand_7card", test_7card_rand}, {"equity", test_equity}};
+} tests[] = {{"flush", test_flush},
+             {"unique", test_unique},
+             {"primes", test_primes},
+             {"handrange", test_handrange},
+             {"all_5card", test_all_5card},
+             {"all_7card", test_all_7card},
+             {"rand_7card", test_7card_rand},
+             {"equity", test_equity},
+             {"handrange_freq", test_handrange_freq}};
 const size_t nTests = sizeof(tests) / sizeof(struct Test);
 
 void print_tests(const char *fmt) {
