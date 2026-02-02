@@ -283,6 +283,17 @@ int equity() {
     return 0;
 }
 
+typedef struct HandEquityDbl {
+    float win, chop;
+    double winOuts, chopOuts, equity;
+} handequity_dbl_t;
+
+typedef struct EquityInfoDbl {
+    double total;
+    float time;
+    handequity_dbl_t *equities;
+} equityinfo_dbl_t;
+
 int range_equity() {
     evaluator_t *evaluator = evaluator_load("handranks.dat");
     if (!evaluator)
@@ -319,14 +330,15 @@ int range_equity() {
     }
 
     card_t hands[4] = {0};
-    equityinfo_t equity = {0};
-    equity.equities = calloc(2, sizeof(handequity_t));
+    equityinfo_dbl_t equity = {0};
+    equity.equities = calloc(2, sizeof(handequity_dbl_t));
 
     for (int a = 0; a < handRange1->size; ++a) {
-        memcpy(hands, handrange_get(handRange1, a)->cards, sizeof(card_t) * 2);
+        const handentry_t *hand1 = handrange_get(handRange1, a);
+        memcpy(hands, hand1->cards, sizeof(card_t) * 2);
         for (int b = 0; b < handRange2->size; ++b) {
-            memcpy(hands + 2, handrange_get(handRange2, b)->cards,
-                   sizeof(card_t) * 2);
+            const handentry_t *hand2 = handrange_get(handRange2, b);
+            memcpy(hands + 2, hand2->cards, sizeof(card_t) * 2);
 
             bool duplicate = false;
             for (int i = 0; i < 4 - 1; ++i)
@@ -342,33 +354,34 @@ int range_equity() {
             equityinfo_t *tempEquity =
                 equity_calc(evaluator, hands, 2, NULL, 0);
 
-            equity.total += tempEquity->total;
-            equity.time += tempEquity->time;
+            double freq = (double)(hand1->frequency * hand2->frequency);
+
+            equity.total += (double)tempEquity->total * freq;
+            equity.time += (double)tempEquity->time * freq;
 
             for (int i = 0; i < 2; ++i) {
-                equity.equities[i].winOuts += tempEquity->equities[i].winOuts;
-                equity.equities[i].chopOuts += tempEquity->equities[i].chopOuts;
+                equity.equities[i].winOuts +=
+                    (double)tempEquity->equities[i].winOuts * freq;
+                equity.equities[i].chopOuts +=
+                    (double)tempEquity->equities[i].chopOuts * freq;
             }
 
             equity_destroy(tempEquity);
         }
 
-        printf(
-            "\r%.2lf%% %.2lf%%",
-            (double)equity.equities[0].winOuts / (double)equity.total * 100.0f,
-            (double)equity.equities[1].winOuts / (double)equity.total * 100.0f);
+        printf("\r%.2lf%% %.2lf%%",
+               equity.equities[0].winOuts / equity.total * 100.0f,
+               equity.equities[1].winOuts / equity.total * 100.0f);
         fflush(stdout);
     }
 
     char *timeStr = format_time(equity.time);
-    printf("\rTime: %s, total: %lu\n", timeStr, equity.total);
+    printf("\rTime: %s, total combos: %.2lf\n", timeStr, equity.total);
     free(timeStr);
     for (int i = 0; i < 2; ++i) {
-        equity.equities[i].win =
-            (double)equity.equities[i].winOuts / (double)equity.total;
-        equity.equities[i].chop =
-            (double)equity.equities[i].chopOuts / (double)equity.total;
-        printf("Hand %d: Win: %.2f, Chop: %.2f\n", i + 1,
+        equity.equities[i].win = equity.equities[i].winOuts / equity.total;
+        equity.equities[i].chop = equity.equities[i].chopOuts / equity.total;
+        printf("Hand %d: Win: %.2lf, Chop: %.2lf\n", i + 1,
                equity.equities[i].win * 100.0f,
                equity.equities[i].chop * 100.0f);
     }
