@@ -33,11 +33,11 @@ void card_to_string(card_t card, char str[3]) {
 card_t card_from_str(const char *str) {
     suit_t suit = -1;
     rank_t rank = -1;
-    for (int i = 0; i < sizeof(ranks); ++i)
+    for (int i = 0; i < sizeof(ranks) - 1; ++i)
         if (str[0] == ranks[i])
             rank = i;
 
-    for (int i = 0; i < sizeof(suits); ++i)
+    for (int i = 0; i < sizeof(suits) - 1; ++i)
         if (str[1] == suits[i])
             suit = i;
 

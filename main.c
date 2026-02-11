@@ -63,7 +63,7 @@ int equity() {
     char nHandsStr[10] = {0};
     while (nHands < 0) {
         printf("Enter number of hands: ");
-        if (fgets(nHandsStr, 9, stdin) == NULL) {
+        if (fgets(nHandsStr, 10, stdin) == NULL) {
             printf("Failed to read stdin\n");
             evaluator_destroy(evaluator);
             return 1;
@@ -81,7 +81,7 @@ int equity() {
         for (;;) {
             printf("Enter hand for player %d (2 cards): ", i + 1);
             char cardStr[10] = {0};
-            if (fgets(cardStr, 9, stdin) == NULL) {
+            if (fgets(cardStr, 10, stdin) == NULL) {
                 printf("Failed to read stdin\n");
                 free(hands);
                 evaluator_destroy(evaluator);
@@ -116,7 +116,7 @@ int equity() {
     for (;;) {
         printf("Enter flop: ");
         char flopStr[15] = {0};
-        if (fgets(flopStr, 14, stdin) == NULL) {
+        if (fgets(flopStr, 15, stdin) == NULL) {
             printf("Failed to read stdin\n");
             free(hands);
             evaluator_destroy(evaluator);
@@ -158,7 +158,7 @@ int equity() {
     for (;;) {
         printf("Enter turn: ");
         char turnStr[10] = {0};
-        if (fgets(turnStr, 9, stdin) == NULL) {
+        if (fgets(turnStr, 10, stdin) == NULL) {
             printf("Failed to read stdin\n");
             free(hands);
             evaluator_destroy(evaluator);
@@ -197,7 +197,7 @@ int equity() {
     for (;;) {
         printf("Enter river: ");
         char riverStr[10] = {0};
-        if (fgets(riverStr, 9, stdin) == NULL) {
+        if (fgets(riverStr, 10, stdin) == NULL) {
             printf("Failed to read stdin\n");
             free(hands);
             evaluator_destroy(evaluator);
@@ -294,14 +294,16 @@ typedef struct EquityInfoDbl {
     handequity_dbl_t *equities;
 } equityinfo_dbl_t;
 
+#define MAX_RANGE_LENGTH 1024
+
 int range_equity() {
     evaluator_t *evaluator = evaluator_load("handranks.dat");
     if (!evaluator)
         return 1;
 
     printf("Enter range 1: ");
-    char range[30];
-    if (fgets(range, 30, stdin) == NULL) {
+    char range[MAX_RANGE_LENGTH] = {0};
+    if (fgets(range, MAX_RANGE_LENGTH, stdin) == NULL) {
         printf("Failed to read stdin\n");
         evaluator_destroy(evaluator);
         return 1;
@@ -316,7 +318,7 @@ int range_equity() {
 
     printf("Enter range 2: ");
     memset(range, 0, sizeof(range));
-    if (fgets(range, 30, stdin) == NULL) {
+    if (fgets(range, MAX_RANGE_LENGTH, stdin) == NULL) {
         printf("Failed to read stdin\n");
         evaluator_destroy(evaluator);
         return 1;
@@ -327,6 +329,35 @@ int range_equity() {
         handrange_destroy(handRange1);
         evaluator_destroy(evaluator);
         return 1;
+    }
+
+    card_t community[4] = {0};
+    int nCommunity = 0;
+    for (;;) {
+        nCommunity = 0;
+        memset(community, 0, sizeof(community));
+
+        printf("Enter community cards: ");
+        char communityStr[15] = {0};
+        if (fgets(communityStr, 15, stdin) == NULL) {
+            printf("Failed to read stdin\n");
+            handrange_destroy(handRange1);
+            handrange_destroy(handRange2);
+            evaluator_destroy(evaluator);
+            return 1;
+        }
+
+        for (; nCommunity < 4;) {
+            card_t card = card_from_str(communityStr + nCommunity * 3);
+            if (!card)
+                break;
+            community[nCommunity++] = card;
+        }
+
+        if (nCommunity == 0 || nCommunity == 3 || nCommunity == 4)
+            break;
+
+        printf("Invalid community cards\n");
     }
 
     card_t hands[4] = {0};
@@ -352,7 +383,7 @@ int range_equity() {
                 continue;
 
             equityinfo_t *tempEquity =
-                equity_calc(evaluator, hands, 2, NULL, 0);
+                equity_calc(evaluator, hands, 2, community, nCommunity);
 
             double freq = (double)(hand1->frequency * hand2->frequency);
 
